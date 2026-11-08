@@ -51,6 +51,9 @@ type deviceTreeProperties struct {
 
 type moduleSetProperties struct {
 	Enabled              *bool
+	// Create module installers only for Soong-only builds; legacy Make owns
+	// module installation in hybrid builds when this is set.
+	Soong_only           *bool
 	Build_targets        []string
 	External_module_root *string
 	External_modules     []string
@@ -148,6 +151,9 @@ func kernelFactory() android.Module {
 
 func (m *kernelModule) createModuleInstallers(ctx android.LoadHookContext) {
 	var requiredInstallers []string
+	if proptools.Bool(m.properties.Modules.Soong_only) && ctx.Config().KatiEnabled() {
+		return
+	}
 	if !proptools.Bool(m.properties.Modules.Enabled) {
 		createModulesAggregate(ctx, requiredInstallers)
 		return
